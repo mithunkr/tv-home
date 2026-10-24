@@ -14,5 +14,5 @@ brew list --cask android-commandlinetools >/dev/null 2>&1 || brew install --cask
 SDK=/opt/homebrew/share/android-commandlinetools
 # Installing the SDK packages means accepting Google's Android SDK licence.
 yes | JAVA_HOME=/opt/homebrew/opt/openjdk@17 sdkmanager --sdk_root="$SDK" \
-  "platforms;android-34" "build-tools;34.0.0" >/dev/null
-echo "✓ JDK 17 + Android SDK (platform 34, build-tools 34.0.0)"
+  "platforms;android-36" "build-tools;36.0.0" >/dev/null
+echo "✓ JDK 17 + Android SDK (platform 36, build-tools 36.0.0)"

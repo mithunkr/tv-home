@@ -7,8 +7,10 @@ cd "$(dirname "$0")"
 export JAVA_HOME="${JAVA_HOME:-/opt/homebrew/opt/openjdk@17}"
 export PATH="$JAVA_HOME/bin:$PATH"
 SDK="${ANDROID_HOME:-/opt/homebrew/share/android-commandlinetools}"
-BT="$SDK/build-tools/34.0.0"
-JAR="$SDK/platforms/android-34/android.jar"
+# Target the latest API: Play Protect blocks installs of apps built for older Android versions.
+API=36
+BT="$SDK/build-tools/$API.0.0"
+JAR="$SDK/platforms/android-$API/android.jar"
 # Google TV stock launcher; older Android TV sets use com.google.android.tvlauncher.
 STOCK_LAUNCHER="${STOCK_LAUNCHER:-com.google.android.apps.tv.launcherx}"
 B=build
@@ -16,7 +18,7 @@ B=build
 rm -rf "$B" && mkdir -p "$B/gen" "$B/classes" "$B/dex"
 "$BT/aapt2" compile --dir res -o "$B/res.zip"
 "$BT/aapt2" link -o "$B/base.apk" -I "$JAR" --manifest AndroidManifest.xml --java "$B/gen" \
-  -A assets --min-sdk-version 30 --target-sdk-version 30 "$B/res.zip"
+  -A assets --min-sdk-version 30 --target-sdk-version $API "$B/res.zip"
 javac -nowarn -Xlint:-options --release 11 -classpath "$JAR" -d "$B/classes" \
   $(find src "$B/gen" -name '*.java')
 "$BT/d8" --min-api 30 --lib "$JAR" --output "$B/dex" $(find "$B/classes" -name '*.class')
