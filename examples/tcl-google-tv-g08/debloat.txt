@@ -1,0 +1,28 @@
+# TCL Google TV (device G08), Android 14, build UTT2.250416.001
+# Apply: tools/disable.sh examples/tcl-google-tv-g08/debloat.txt   Undo: tools/restore.sh <same file>
+# Everything is DISABLED for user 0, never uninstalled.
+# Answers here: keeps Chromecast, AirPlay, Alexa, USB media, ambient screensaver, Live TV.
+# Kept on purpose: com.tcl.ttvs + com.tcl.usercenter (Alexa bridge / TCL account).
+
+# TCL ads, promos and telemetry
+com.tcl.messagebox                 # TCL promo message popups
+com.tcl.esticker                   # on-screen promo stickers
+com.tcl.partnercustomizer          # partner app rows / promos for the stock launcher
+com.tcl.logkit                     # log collection / upload
+com.tcl.exhibit                    # store demo mode
+
+# TCL content tabs and channels
+com.tcl.channelplus                # "TCL Channel" app
+com.tcl.waterfall.overseas         # the "TCL" content tab
+com.tcl.tv.tclhome_passive
+
+# TCL background clutter / unused features
+com.tcl.guard                      # cleaner / "TV guard"
+com.tcl.miracast                   # screen mirroring (not used)
+com.tcl.magiconnectfree            # T-Cast phone app link (not used)
+com.tcl.gamebar                    # game overlay (not used)
+
+# Google extras
+com.google.android.feedback
+com.google.android.play.games
+android.autoinstalls.config.google.gtvpai   # silently installs promoted apps

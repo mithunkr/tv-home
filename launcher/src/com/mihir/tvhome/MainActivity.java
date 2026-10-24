@@ -130,7 +130,8 @@ public class MainActivity extends Activity {
         pf.addAction(Intent.ACTION_PACKAGE_REMOVED);
         pf.addAction(Intent.ACTION_PACKAGE_CHANGED);
         pf.addDataScheme("package");
-        registerReceiver(packages, pf);
+        // Android 14+ requires an export flag; system broadcasts still arrive with NOT_EXPORTED.
+        registerReceiver(packages, pf, RECEIVER_NOT_EXPORTED);
     }
 
     @Override
@@ -140,7 +141,7 @@ public class MainActivity extends Activity {
         tf.addAction(Intent.ACTION_TIME_CHANGED);
         tf.addAction(Intent.ACTION_TIMEZONE_CHANGED);
         tf.addAction(WifiManager.NETWORK_STATE_CHANGED_ACTION);
-        registerReceiver(tick, tf);
+        registerReceiver(tick, tf, RECEIVER_NOT_EXPORTED);
         updateClock();
         updateWifi();
         View last = lastFocusedId == View.NO_ID ? null : findViewById(lastFocusedId);
