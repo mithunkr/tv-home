@@ -44,6 +44,24 @@ launcher/build-and-install.sh                               # build + install th
 
 Undo everything with `tools/restore.sh <the same list>`.
 
+## Do it by hand (Windows)
+
+Needs the Android SDK from Android Studio (SDK Manager: Platform-Tools, Android 16 / API 36 platform,
+Build-Tools 36.0.0) and JDK 21 (`winget install Microsoft.OpenJDK.21`; or set `JAVA_HOME_21`).
+Plain `adb` works on Windows, so no Python client is needed. Find the TV's IP under
+Settings → Network & Internet → your Wi-Fi network.
+
+```powershell
+$adb = "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe"
+& $adb connect <TV-IP>:5555                                  # accept the prompt on the TV
+# Debloat: one pm call per package (or your own list, see examples/)
+Get-Content examples\tcl-google-tv-g08\debloat.txt | % { ($_ -replace '#.*','').Trim() } | ? { $_ } |
+  % { & $adb -s <TV-IP>:5555 shell pm disable-user --user 0 $_ }
+launcher\build-and-install.ps1 <TV-IP>                       # build + install the launcher
+```
+
+Undo everything with `tools\restore.ps1 <TV-IP> <the same list>`.
+
 ## What's here
 
 | Path | What it is |
@@ -55,6 +73,7 @@ Undo everything with `tools/restore.sh <the same list>`.
 | [tools/find-tv.sh](tools/find-tv.sh) | Finds Android TVs on your Wi-Fi |
 | [tools/type.sh](tools/type.sh) | Type into the TV's on-screen keyboard from your laptop (`tools/type.sh` alone prompts hidden, for passwords) |
 | [tools/disable.sh](tools/disable.sh), [tools/restore.sh](tools/restore.sh) | Apply / undo a debloat list |
+| [launcher/build-and-install.ps1](launcher/build-and-install.ps1), [tools/restore.ps1](tools/restore.ps1) | Windows versions of the build and restore scripts |
 | [examples/](examples/) | Debloat lists per TV model |
 
 ## The launcher
@@ -83,6 +102,10 @@ Change the dock: edit `config.xml`, then run `launcher/build-and-install.sh`.
   scripts run one per shell call.
 - **Apps installed from the Play Store didn't appear**, because the package broadcast was missed
   while another app was in front. The launcher re-checks with `getChangedPackages` on every return.
+- **Play Protect blocks the launcher** ("built for an older version of Android") if it targets an
+  old API. The build scripts target API 36.
+- **No wallpapers when built on Windows**: `aapt2 -A` writes asset paths with backslashes, which
+  Android can't list. `build-and-install.ps1` adds the assets itself.
 - **Unsplash blocks scripted downloads** with a bot check. The wallpapers come from Wikimedia
   Commons Featured Pictures instead.
 
@@ -90,7 +113,7 @@ Change the dock: edit `config.xml`, then run `launcher/build-and-install.sh`.
 
 Android TV and Google TV: TCL, Xiaomi/Redmi, Hisense, Sony, OnePlus, Realme, Nvidia Shield,
 Chromecast with Google TV and most others. Not Samsung (Tizen), LG (webOS) or Fire TV.
-Tested on: TCL Google TV (Android 11). Add yours to `examples/`.
+Tested on: TCL Google TV G07 (Android 11), TCL Google TV G08 (Android 14). Add yours to `examples/`.
 
 ## Credits
 
