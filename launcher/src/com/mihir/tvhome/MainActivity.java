@@ -42,6 +42,8 @@ import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 import android.widget.TextView;
 
+import org.json.JSONObject;
+
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -95,6 +97,10 @@ public class MainActivity extends Activity {
     private final Runnable rotateWallpaper = this::nextWallpaper;
     static final long WALLPAPER_INTERVAL_MS = 10 * 60 * 1000;
     private TextView greeting, clock, ampm, date, title, wifiPill, appsLabel;
+    private TextView weatherLine, sunLine;
+    private final Runnable refreshWeather = this::fetchWeather;
+    static final long WEATHER_INTERVAL_MS = 30 * 60 * 1000;
+    private long weatherFetchedAt;
     private int glowColor = 0xFF3A3A3A;
     private ValueAnimator glowAnim;
     private int lastFocusedId = View.NO_ID;
@@ -119,8 +125,7 @@ public class MainActivity extends Activity {
         hidden.add(getPackageName());
         liveTvPkg = getString(R.string.live_tv_package);
         inputPickerPkg = getString(R.string.input_picker_package);
-        cols = getResources().getInteger(R.integer.columns);
-        getWindow().getDecorView().setSystemUiVisibility(
+        cols = getResources().getInteger(R.integer.columns);        getWindow().getDecorView().setSystemUiVisibility(
                 View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
                         | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY | View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
         setContentView(buildUi());
@@ -145,6 +150,8 @@ public class MainActivity extends Activity {
         registerReceiver(tick, tf, RECEIVER_NOT_EXPORTED);
         updateClock();
         updateWifi();
+        if (weatherFetchedAt == 0 || SystemClock.elapsedRealtime() - weatherFetchedAt >= WEATHER_INTERVAL_MS) fetchWeather();
+        else handler.postDelayed(refreshWeather, WEATHER_INTERVAL_MS - (SystemClock.elapsedRealtime() - weatherFetchedAt));
         View last = lastFocusedId == View.NO_ID ? null : findViewById(lastFocusedId);
         if (last == null && !dockCards.isEmpty()) last = dockCards.get(0);
         if (last != null) last.requestFocus();
@@ -160,6 +167,7 @@ public class MainActivity extends Activity {
     protected void onPause() {
         super.onPause();
         handler.removeCallbacks(rotateWallpaper);
+        handler.removeCallbacks(refreshWeather);
         unregisterReceiver(tick);
         if (inputsPopup != null) inputsPopup.dismiss();
     }
@@ -297,8 +305,25 @@ public class MainActivity extends Activity {
         date.setPadding(0, 0, dp(16), 0); // letterSpacing is not counted in the measured width
         date.setLetterSpacing(0.22f);
         left.addView(date);
-        for (TextView t : new TextView[]{greeting, clock, ampm, date}) t.setShadowLayer(dp(10), 0, dp(1), 0xB3000000);
-        header.addView(left, new FrameLayout.LayoutParams(dp(420), -2, Gravity.START | Gravity.TOP));
+
+        // Weather and sunrise/sunset; hidden until there's something to show.
+        weatherLine = text(13, "sans-serif-light", Color.WHITE);
+        sunLine = text(10, "sans-serif-medium", 0x99FFFFFF);
+        sunLine.setLetterSpacing(0.22f);
+        for (TextView t : new TextView[]{weatherLine, sunLine}) {
+            t.setSingleLine(true);
+            t.setEllipsize(android.text.TextUtils.TruncateAt.END);
+            t.setVisibility(View.GONE);
+        }
+        left.addView(weatherLine, llp(-2, -2, 0, dp(14), 0, 0));
+        left.addView(sunLine, llp(-2, -2, 0, dp(4), 0, 0));
+        // Last fetched weather, so it shows instantly and while offline.
+        showLine(weatherLine, getPreferences(MODE_PRIVATE).getString("weather", ""));
+        showLine(sunLine, getPreferences(MODE_PRIVATE).getString("sun", ""));
+
+        for (TextView t : new TextView[]{greeting, clock, ampm, date, weatherLine, sunLine})
+            t.setShadowLayer(dp(10), 0, dp(1), 0xB3000000);
+        header.addView(left, new FrameLayout.LayoutParams(dp(560), -2, Gravity.START | Gravity.TOP));
 
         LinearLayout right = new LinearLayout(this);
         right.setGravity(Gravity.CENTER_VERTICAL);
@@ -657,6 +682,70 @@ public class MainActivity extends Activity {
             }
         } catch (SecurityException ignored) { }
         wifiPill.setText("◉  " + name);
+    }
+
+    private static void showLine(TextView t, String s) {
+        t.setText(s);
+        t.setVisibility(s == null || s.isEmpty() ? View.GONE : View.VISIBLE);
+    }
+
+    // ---------------------------------------------------------------- weather
+
+    /** Current weather and today's sunrise/sunset from Open-Meteo, every 30 minutes while home is shown. */
+    private void fetchWeather() {
+        handler.removeCallbacks(refreshWeather);
+        weatherFetchedAt = SystemClock.elapsedRealtime();
+        handler.postDelayed(refreshWeather, WEATHER_INTERVAL_MS);
+        String url = "https://api.open-meteo.com/v1/forecast?latitude=" + getString(R.string.weather_latitude)
+                + "&longitude=" + getString(R.string.weather_longitude)
+                + "&current=temperature_2m,weather_code,is_day"
+                + "&daily=temperature_2m_max,temperature_2m_min,sunrise,sunset&timezone=auto&forecast_days=1";
+        new Thread(() -> {
+            try {
+                java.net.HttpURLConnection c = (java.net.HttpURLConnection) new java.net.URL(url).openConnection();
+                c.setConnectTimeout(10000);
+                c.setReadTimeout(10000);
+                String body;
+                try (java.util.Scanner sc = new java.util.Scanner(c.getInputStream(), "UTF-8").useDelimiter("\\A")) {
+                    body = sc.next();
+                }
+                JSONObject j = new JSONObject(body), cur = j.getJSONObject("current"), day = j.getJSONObject("daily");
+                int code = cur.getInt("weather_code");
+                String weather = weatherIcon(code, cur.getInt("is_day") == 1) + "  "
+                        + Math.round(cur.getDouble("temperature_2m")) + "°  " + weatherText(code)
+                        + "     H " + Math.round(day.getJSONArray("temperature_2m_max").getDouble(0))
+                        + "°   L " + Math.round(day.getJSONArray("temperature_2m_min").getDouble(0)) + "°";
+                // "2026-10-24T07:52" → "07:52"
+                String sun = "SUNRISE " + day.getJSONArray("sunrise").getString(0).substring(11)
+                        + "     SUNSET " + day.getJSONArray("sunset").getString(0).substring(11);
+                getPreferences(MODE_PRIVATE).edit().putString("weather", weather).putString("sun", sun).apply();
+                runOnUiThread(() -> { showLine(weatherLine, weather); showLine(sunLine, sun); });
+            } catch (Exception ignored) { } // offline: keep showing the last result
+        }).start();
+    }
+
+    /** WMO weather codes, as used by Open-Meteo. */
+    private static String weatherText(int code) {
+        if (code == 0) return "Clear";
+        if (code <= 2) return "Partly cloudy";
+        if (code == 3) return "Overcast";
+        if (code <= 48) return "Fog";
+        if (code <= 57) return "Drizzle";
+        if (code <= 67) return "Rain";
+        if (code <= 77) return "Snow";
+        if (code <= 82) return "Showers";
+        if (code <= 86) return "Snow showers";
+        return "Thunderstorm";
+    }
+
+    private static String weatherIcon(int code, boolean isDay) {
+        if (code == 0) return isDay ? "☀️" : "🌙";
+        if (code <= 2) return isDay ? "⛅" : "☁️";
+        if (code == 3) return "☁️";
+        if (code <= 48) return "🌫️";
+        if (code <= 67 || (code >= 80 && code <= 82)) return "🌧️";
+        if (code <= 86) return "🌨️";
+        return "⛈️";
     }
 
     // ---------------------------------------------------------------- glow

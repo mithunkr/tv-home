@@ -67,7 +67,7 @@ Undo everything with `tools\restore.ps1 <TV-IP> <the same list>`.
 | Path | What it is |
 |---|---|
 | [PROMPT.md](PROMPT.md) | The prompt for Claude Code / any coding agent |
-| [launcher/](launcher/) | The home screen. 4.7 MB including the wallpapers; plain Android, no network, no background services |
+| [launcher/](launcher/) | The home screen. 4.7 MB including the wallpapers; plain Android, no background services; its only network use is the weather |
 | [launcher/res/values/config.xml](launcher/res/values/config.xml) | Dock apps, hidden apps, Live TV app, grid columns |
 | [tools/tv.py](tools/tv.py) | Pure-Python ADB client: shell, batch, screenshots, chunked APK push |
 | [tools/find-tv.sh](tools/find-tv.sh) | Finds Android TVs on your Wi-Fi |
@@ -78,7 +78,9 @@ Undo everything with `tools\restore.ps1 <TV-IP> <the same list>`.
 
 ## The launcher
 
-- Clock, greeting and date top-left. Frosted pills top-right for **Inputs** (HDMI/AV/Live TV
+- Clock, greeting and date top-left, with the weather and sunrise/sunset from
+  [Open-Meteo](https://open-meteo.com) (no API key; set your location in `config.xml`, fetched every
+  30 minutes while the home screen is shown). Frosted pills top-right for **Inputs** (HDMI/AV/Live TV
   dropdown; the remote's Menu key opens it too), **Wi-Fi** (shows the network name) and **Settings**.
 - A dock of your favourite apps. The focused app's name appears above it over a glow coloured from
   its banner. Press Down for every other app in a grid.

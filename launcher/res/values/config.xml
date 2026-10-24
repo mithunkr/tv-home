@@ -33,6 +33,10 @@
     <!-- The manufacturer's own source picker, used if switching to an input directly fails. -->
     <string name="input_picker_package" translatable="false">com.tcl.suspension</string>
 
+    <!-- Weather and sunrise/sunset (Open-Meteo, no API key), for this location. Mannheim. -->
+    <string name="weather_latitude" translatable="false">49.49</string>
+    <string name="weather_longitude" translatable="false">8.47</string>
+
     <!-- Tiles per row in the grid. -->
     <integer name="columns">5</integer>
 </resources>
