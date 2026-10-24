@@ -10,10 +10,8 @@
         <item>com.google.android.youtube.tv</item>
         <item>com.amazon.amazonvideo.livingroom</item>
         <item>com.disney.disneyplus</item>
-        <item>com.apple.atve.androidtv.appletv</item>
         <item>com.wbd.stream</item>
-        <item>com.cbs.ca</item>
-        <item>bbc.iplayer.android</item>
+        <item>de.telekom.magentatv.tv</item>
     </string-array>
 
     <!-- Never shown as tiles: system helpers, and the Live TV app (it's in the Inputs menu). -->
