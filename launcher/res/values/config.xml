@@ -4,7 +4,9 @@
   Package names: tools/venv/bin/python -I tools/tv.py 'pm list packages'
 -->
 <resources>
-    <!-- Dock apps, left to right. Apps that aren't installed are skipped. -->
+    <!-- Dock apps, left to right. Apps that aren't installed are skipped.
+         "input:<TV input id>" adds a Live TV tile that opens that input directly, e.g. the tuner
+         (input ids: adb shell dumpsys tv_input). -->
     <string-array name="dock_apps">
         <item>com.netflix.ninja</item>
         <item>com.google.android.youtube.tv</item>
@@ -12,6 +14,7 @@
         <item>com.disney.disneyplus</item>
         <item>com.wbd.stream</item>
         <item>de.telekom.magentatv.tv</item>
+        <item>input:com.tcl.tvinput/.TunerInputService/HW2</item>
     </string-array>
 
     <!-- Never shown as tiles: system helpers, and the Live TV app (it's in the Inputs menu). -->

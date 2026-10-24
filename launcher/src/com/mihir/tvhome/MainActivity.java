@@ -70,6 +70,7 @@ public class MainActivity extends Activity {
     static final class App {
         String pkg, label;
         ComponentName component;
+        Intent intent; // set for TV input tiles instead of component
         Drawable art;
         boolean isBanner;
         int color;
@@ -362,7 +363,10 @@ public class MainActivity extends Activity {
         }
 
         List<App> dock = new ArrayList<>();
-        for (String p : dockApps) if (byPkg.containsKey(p)) dock.add(byPkg.remove(p));
+        for (String p : dockApps) {
+            if (p.startsWith("input:")) { App a = inputApp(p.substring(6)); if (a != null) dock.add(a); }
+            else if (byPkg.containsKey(p)) dock.add(byPkg.remove(p));
+        }
         List<App> rest = new ArrayList<>(byPkg.values());
         Collections.sort(rest, (x, y) -> x.label.compareToIgnoreCase(y.label));
 
@@ -404,6 +408,26 @@ public class MainActivity extends Activity {
         View last = lastFocusedId == View.NO_ID ? null : findViewById(lastFocusedId);
         if (last != null) last.requestFocus();
         else if (!dockCards.isEmpty()) dockCards.get(0).requestFocus();
+    }
+
+    /** Dock tile for a TV input (e.g. the tuner): the Live TV app's artwork, opening that input directly. */
+    private App inputApp(String inputId) {
+        PackageManager pm = getPackageManager();
+        Intent li = pm.getLeanbackLaunchIntentForPackage(liveTvPkg);
+        ResolveInfo ri = li == null ? null : pm.resolveActivity(li, 0);
+        if (ri == null) return null;
+        App a = new App();
+        a.pkg = "input:" + inputId;
+        a.label = "Live TV";
+        // CLEAR_TOP: otherwise an already-open Live TV app just comes to the front on its last input.
+        a.intent = new Intent(Intent.ACTION_VIEW, TvContract.buildChannelsUriForInput(inputId))
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        Drawable banner = ri.activityInfo.loadBanner(pm);
+        if (banner == null) banner = ri.activityInfo.applicationInfo.loadBanner(pm);
+        a.isBanner = banner != null;
+        a.art = banner != null ? banner : ri.loadIcon(pm);
+        a.color = sampleColor(a.pkg, a.art);
+        return a;
     }
 
     /** A 16:9 card with the app's banner; the name shows under it while focused. */
@@ -459,7 +483,7 @@ public class MainActivity extends Activity {
         label.setAlpha(0f);
         if (!inDock) box.addView(label, llp(-1, -2, 0, dp(10), 0, 0));
 
-        card.setOnClickListener(v -> launch(new Intent(Intent.ACTION_MAIN)
+        card.setOnClickListener(v -> launch(app.intent != null ? new Intent(app.intent) : new Intent(Intent.ACTION_MAIN)
                 .addCategory(Intent.CATEGORY_LEANBACK_LAUNCHER)
                 .setComponent(app.component)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED)));
