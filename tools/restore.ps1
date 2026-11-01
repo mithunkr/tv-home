@@ -1,7 +1,7 @@
 # Windows version of restore.sh: undo everything. Re-enables every package in the debloat list, brings
 # back the stock launcher and Google TV's setup app, makes the stock launcher the default home again and
 # removes the custom launcher.
-# Usage: tools\restore.ps1 192.168.8.114 examples\tcl-google-tv-g08\debloat.txt
+# Usage: tools\restore.ps1 192.168.8.113examples\tcl-google-tv-g08\debloat.txt
 #   $env:STOCK_LAUNCHER="com.google.android.tvlauncher/.MainActivity"   (older Android TV)
 param([Parameter(Mandatory)][string]$Tv, [Parameter(Mandatory)][string]$List)
 $adb = "$(if ($env:ANDROID_HOME) { $env:ANDROID_HOME } else { "$env:LOCALAPPDATA\Android\Sdk" })\platform-tools\adb.exe"

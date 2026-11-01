@@ -37,6 +37,8 @@
     <string name="weather_latitude" translatable="false">49.49</string>
     <string name="weather_longitude" translatable="false">8.47</string>
 
+    <string name="app_keys_description" translatable="false">Makes the Netflix, Prime Video, YouTube and Settings buttons on the remote work.</string>
+
     <!-- Tiles per row in the grid. -->
     <integer name="columns">5</integer>
 </resources>

@@ -1,6 +1,6 @@
 # Windows version of build-and-install.sh: build the launcher APK with the bare SDK tools (no Gradle)
 # and install it on the TV as the home screen.
-#   launcher\build-and-install.ps1 192.168.8.114            build + install
+#   launcher\build-and-install.ps1 192.168.8.113           build + install
 #   launcher\build-and-install.ps1 -Build                   build only
 param([string]$Tv, [switch]$Build)
 $ErrorActionPreference = "Stop"
@@ -51,6 +51,10 @@ foreach ($c in "pm grant com.mihir.tvhome android.permission.ACCESS_FINE_LOCATIO
                "pm disable-user --user 0 $stock",
                "pm disable-user --user 0 com.google.android.tungsten.setupwraith",
                "cmd package set-home-activity --user 0 com.mihir.tvhome/.MainActivity",
+               # Remote app buttons: see AppKeyService. Without AUTO_START, TCL blocks the service from binding.
+               "appops set com.mihir.tvhome AUTO_START allow",
+               "settings put secure enabled_accessibility_services com.mihir.tvhome/.AppKeyService",
+               "settings put secure accessibility_enabled 1",
                "am force-stop com.android.tv.settings",
                "input keyevent KEYCODE_HOME") {
   "$c -> " + (& $adb -s $s shell $c 2>&1)

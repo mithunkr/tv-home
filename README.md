@@ -97,6 +97,12 @@ Change the dock: edit `config.xml`, then run `launcher/build-and-install.sh`.
 - **Google TV hijacks the Home button.** With the stock launcher disabled, the setup app
   (`com.google.android.tungsten.setupwraith`) has a higher HOME priority than any third-party
   launcher. The install script disables it; `restore.sh` re-enables it.
+- **Remote app buttons die with the stock launcher.** On TCL Google TV, the system hands Netflix and
+  Prime Video presses to a receiver inside the launcher, and it also handles YouTube and Settings.
+  Re-enabling the launcher isn't an option, because its HOME priority beats ours. The launcher's
+  `AppKeyService` (an accessibility service) handles those buttons instead; the install script
+  enables it and sets the `AUTO_START` app op, without which TCL blocks it from binding. TCL Channel
+  needs `com.tcl.waterfall.overseas` enabled, so the G08 debloat list keeps it.
 - **Home opened the launcher behind the current app**, because of a stale home task from switching
   launchers. Force-stopping the launcher and `com.android.tv.settings` and pressing Home fixes it.
   The install script does this.

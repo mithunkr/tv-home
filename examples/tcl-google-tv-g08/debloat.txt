@@ -13,7 +13,6 @@ com.tcl.exhibit                    # store demo mode
 
 # TCL content tabs and channels
 com.tcl.channelplus                # "TCL Channel" app
-com.tcl.waterfall.overseas         # the "TCL" content tab
 com.tcl.tv.tclhome_passive
 
 # TCL background clutter / unused features

@@ -41,6 +41,9 @@ printf '%s\n' \
   "pm disable-user --user 0 $STOCK_LAUNCHER" \
   "pm disable-user --user 0 com.google.android.tungsten.setupwraith" \
   "cmd package set-home-activity --user 0 com.mihir.tvhome/.MainActivity" \
+  "appops set com.mihir.tvhome AUTO_START allow" \
+  "settings put secure enabled_accessibility_services com.mihir.tvhome/.AppKeyService" \
+  "settings put secure accessibility_enabled 1" \
   "am force-stop com.android.tv.settings" \
   "input keyevent KEYCODE_HOME" \
   | "$PY" -I ../tools/tv.py --batch
